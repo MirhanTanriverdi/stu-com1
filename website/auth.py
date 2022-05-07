@@ -1,32 +1,10 @@
 from functools import cache
-from flask import Blueprint, current_app, render_template, redirect, url_for, request, flash, session, abort, Flask
+from flask import Blueprint, current_app, render_template, redirect, url_for, request, flash
 from . import db
 from .models import User
 from flask_login import current_user, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from authlib.integrations.flask_client import OAuth
-import os
-from google.oauth2 import id_token
-from google_auth_oauthlib.flow import Flow
-from pip._vendor import cachecontrol
-import google.auth.transport.requests
 
-app = Flask(__name__)
-
-oauth = OAuth(app)
-
-google = oauth.register(
-    name='google',
-    client_id=os.getenv("4106274164-hb2rl1p9q52vhqkgpl31obg89cj3rmin.apps.googleusercontent.com"),
-    client_secret=os.getenv("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"),
-    access_token_url='https://accounts.google.com/o/oauth2/token',
-    access_token_params=None,
-    authorize_url='https://accounts.google.com/o/oauth2/auth',
-    authorize_params=None,
-    api_base_url='https://www.googleapis.com/oauth2/v1/',
-    userinfo_endpoint='https://openidconnect.googleapis.com/v1/userinfo',  # This is only needed if using openId to fetch user info
-    client_kwargs={'scope': 'openid email profile'},
-)
 
 
 auth = Blueprint("auth", __name__)
@@ -48,22 +26,6 @@ def login():
                 flash('Invalid password.', category='error')
         else:
             flash('Invalid Email.', category='error')
-    return render_template("login.html", user=current_user)
-
-@auth.route('/login-auth')
-def login_auth():
-    google = oauth.create_client('google')
-    redirect_uri = url_for('authorize', _external=True)
-    return google.authorize_redirect(redirect_uri)
-
-@app.route('/authorize')
-def authorize():
-    google = oauth.create_client('google')
-    token = google.authorize_access_token()
-    resp = google.get('userinfo')
-    resp.raise_for_status()
-    user_info = resp.json()
-    # do something with the token and profile
     return render_template("login.html", user=current_user)
 
 
